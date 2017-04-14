@@ -6,7 +6,7 @@ PagedFileManager* PagedFileManager::instance()
 {
     if(!_pf_manager)
         _pf_manager = new PagedFileManager();
-    
+
     return _pf_manager;
 }
 
@@ -64,8 +64,8 @@ RC PagedFileManager::openFile(const string &fileName, FileHandle &fileHandle)
             return 0;
         }
         else if (fileHandle.isOpen && fileHandle.targetName != fileName){       //opened but new file to handle
-            fileHandle.targetName = fileName;
-            return 0;
+            //fileHandle.targetName = fileName;
+            return -1;
         }
         else{                           //opened already and handling it
             return 0;
@@ -92,6 +92,8 @@ FileHandle::FileHandle()
     readPageCounter = 0;
     writePageCounter = 0;
     appendPageCounter = 0;
+
+    
 }
 
 
