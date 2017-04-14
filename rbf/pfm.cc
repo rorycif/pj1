@@ -23,17 +23,16 @@ PagedFileManager::~PagedFileManager()
 
 RC PagedFileManager::createFile(const string &fileName)
 {
-    it = pfms.find(fileName);
-    if (it == pfms.end()){              //file not found
-        pfms[fileName] = 0;             //saves file to map
-        ofstream myfile;                //creates blank file
-        myfile.open(fileName.c_str());
-        myfile.close();
-        return 0;
-    }
-    else{                               //file already exist
-        return -1;
-    }
+	it = pfms.find(fileName);
+	if (it == pfms.end()){              //file not found
+
+	   pfms[fileName] = fopen(fileName.c_str(), "w");                //creates blank file
+	   fclose(pfms[fileName]);                    //closes file after create
+	   return 0;
+	}
+	else{                               //file already exist*/
+	   return -1;
+	}
 }
 
 
@@ -58,17 +57,13 @@ RC PagedFileManager::openFile(const string &fileName, FileHandle &fileHandle)
         return -1;                      //file does not exist
     }
     else{
-        if (!fileHandle.isOpen){    //nothing is open
+        if (!fileHandle.isOpen){    	//nothing is open
+        	pfms[fileName] = fopen(fileName.c_str(), "r+");
             fileHandle.isOpen = true;
             fileHandle.targetName = fileName;
             return 0;
-        }
-        else if (fileHandle.isOpen && fileHandle.targetName != fileName){       //opened but new file to handle
-            //fileHandle.targetName = fileName;
+        } else {       					//a file is currently opened
             return -1;
-        }
-        else{                           //opened already and handling it
-            return 0;
         }
     }
 }
@@ -76,11 +71,15 @@ RC PagedFileManager::openFile(const string &fileName, FileHandle &fileHandle)
 
 RC PagedFileManager::closeFile(FileHandle &fileHandle)
 {
- //   it = pfms.find(fileHandle.targetName);
- //   if (it == pfms.end()){
- //       return -1;                      //file does not exist
- //   }
-    //todo flush files to disk
+    it = pfms.find(fileHandle.targetName);
+    if (it == pfms.end()){
+        return -1;                      			//file does not exist
+    }
+    
+    //TODO flush files to disk
+    //fwrite(, PAGE_SIZE, fileHandle.getNumberOfPages(), pfms[fileHandle.targetName]);
+    
+    fclose(pfms[fileHandle.targetName]);
     fileHandle.targetName = "";                     //empty refrence
     fileHandle.isOpen = false;                      //handle has closed file
     return 0;

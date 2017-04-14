@@ -32,8 +32,8 @@ protected:
 
 private:
     static PagedFileManager *_pf_manager;
-    map <string, int> pfms;
-    map<string, int>::iterator it;
+	map <string, FILE*> pfms;
+	map<string, FILE*>::iterator it;
 };
 
 
