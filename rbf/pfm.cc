@@ -76,8 +76,7 @@ RC PagedFileManager::closeFile(FileHandle &fileHandle)
         return -1;                      			//file does not exist
     }
     
-    //TODO flush files to disk
-    //fwrite(, PAGE_SIZE, fileHandle.getNumberOfPages(), pfms[fileHandle.targetName]);
+    fflush(pfms[fileHandle.targetName]);            //flushes everything changed to file
     
     fclose(pfms[fileHandle.targetName]);
     fileHandle.targetName = "";                     //empty refrence
