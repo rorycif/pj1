@@ -12,6 +12,7 @@ typedef char byte;
 #include <fstream>
 #include <iostream>
 #include <climits>
+#include <vector>
 using namespace std;
 
 class FileHandle;
@@ -36,8 +37,17 @@ private:
 	map<string, FILE*>::iterator it;
 };
 
+class Page 
+{
+    public:
+        Page();
+        ~Page();
 
-class FileHandle: public PagedFileManager
+        unsigned freeSize;
+        void * data;
+};
+
+class FileHandle
 {
 public:
     // variables to keep the counter for each operation
@@ -47,9 +57,8 @@ public:
 
     string targetName;                                                    //filename of target
     bool isOpen;                                                          //sees if a file has been open
-//    char [4096] buffer;							  //used while reading
-    map<void*, bool> pageMap;
-    map<void*, bool>::iterator pageIt;
+    PagedFileManager * pfmPointer;
+    vector<Page> pageVector;
 
     FileHandle();                                                         // Default constructor
     ~FileHandle();                                                        // Destructor

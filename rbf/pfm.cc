@@ -61,6 +61,7 @@ RC PagedFileManager::openFile(const string &fileName, FileHandle &fileHandle)
         	pfms[fileName] = fopen(fileName.c_str(), "r+");
             fileHandle.isOpen = true;
             fileHandle.targetName = fileName;
+            fileHandle.pfmPointer = this;
             return 0;
         } else {       					//a file is currently opened
             return -1;
@@ -75,9 +76,9 @@ RC PagedFileManager::closeFile(FileHandle &fileHandle)
     if (it == pfms.end()){
         return -1;                      			//file does not exist
     }
-    
+
     fflush(pfms[fileHandle.targetName]);            //flushes everything changed to file
-    
+
     fclose(pfms[fileHandle.targetName]);
     fileHandle.targetName = "";                     //empty refrence
     fileHandle.isOpen = false;                      //handle has closed file
@@ -100,13 +101,12 @@ FileHandle::~FileHandle()
 
 RC FileHandle::readPage(PageNum pageNum, void *data)
 {
-	if (appendPageCounter < pageNum || pageNum < 0){
+	if (appendPageCounter < pageNum){
 		return -1;					//the page must not exist
 	}
 	//TODO find file
 	//find page possibly with fseek()
 	//read page to buffer with fread()
-	
 
     readPageCounter++;                              //increments counter
     return 0;
@@ -115,7 +115,7 @@ RC FileHandle::readPage(PageNum pageNum, void *data)
 
 RC FileHandle::writePage(PageNum pageNum, const void *data)
 {
-	if (appendPageCounter < pageNum || pageNum < 0){
+	if (appendPageCounter < pageNum){
 		return -1;					//page must not exist
 	}
 	//TODO get to page w/ fseek()
@@ -127,6 +127,11 @@ RC FileHandle::writePage(PageNum pageNum, const void *data)
 
 RC FileHandle::appendPage(const void *data)
 {
+    Page newPage;
+    //newPage.data = data;
+    newPage.freeSize = PAGE_SIZE - sizeof(&data);
+    pageVector.push_back(newPage);
+
     appendPageCounter++;                            //increments counter
     return -1;
 }
@@ -141,4 +146,14 @@ unsigned FileHandle::getNumberOfPages()
 RC FileHandle::collectCounterValues(unsigned &readPageCount, unsigned &writePageCount, unsigned &appendPageCount)
 {
     return -1;
+}
+
+Page::Page()
+{
+    freeSize = PAGE_SIZE;
+}
+
+Page::~Page()
+{
+
 }
