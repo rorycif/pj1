@@ -90,8 +90,6 @@ FileHandle::FileHandle()
     readPageCounter = 0;
     writePageCounter = 0;
     appendPageCounter = 0;
-
-    
 }
 
 
@@ -102,15 +100,28 @@ FileHandle::~FileHandle()
 
 RC FileHandle::readPage(PageNum pageNum, void *data)
 {
+	if (appendPageCounter < pageNum || pageNum < 0){
+		return -1;					//the page must not exist
+	}
+	//TODO find file
+	//find page possibly with fseek()
+	//read page to buffer with fread()
+	
+
     readPageCounter++;                              //increments counter
-    return -1;
+    return 0;
 }
 
 
 RC FileHandle::writePage(PageNum pageNum, const void *data)
 {
+	if (appendPageCounter < pageNum || pageNum < 0){
+		return -1;					//page must not exist
+	}
+	//TODO get to page w/ fseek()
+	//write to page using fwrite()
     writePageCounter++;                             //increments counter
-    return -1;
+    return 0;
 }
 
 

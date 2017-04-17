@@ -37,7 +37,7 @@ private:
 };
 
 
-class FileHandle
+class FileHandle: public PagedFileManager
 {
 public:
     // variables to keep the counter for each operation
@@ -47,6 +47,7 @@ public:
 
     string targetName;                                                    //filename of target
     bool isOpen;                                                          //sees if a file has been open
+//    char [4096] buffer;							  //used while reading
     map<void*, bool> pageMap;
     map<void*, bool>::iterator pageIt;
 
