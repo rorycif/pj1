@@ -26,6 +26,8 @@ public:
     RC destroyFile   (const string &fileName);                            // Destroy a file
     RC openFile      (const string &fileName, FileHandle &fileHandle);    // Open a file
     RC closeFile     (FileHandle &fileHandle);                            // Close a file
+    map <string, FILE*> pfms;
+	map<string, FILE*>::iterator it;
 
 protected:
     PagedFileManager();                                                   // Constructor
@@ -33,8 +35,8 @@ protected:
 
 private:
     static PagedFileManager *_pf_manager;
-	map <string, FILE*> pfms;
-	map<string, FILE*>::iterator it;
+
+
 };
 
 class Page 
