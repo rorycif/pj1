@@ -9,13 +9,14 @@
 
 using namespace std;
 
+typedef enum {isOpen, isClosed} StorageFlag;
+
 // Record ID
 typedef struct
 {
   unsigned pageNum;    // page number
   unsigned slotNum;    // slot number in the page
 } RID;
-
 
 // Attribute
 typedef enum { TypeInt = 0, TypeReal, TypeVarChar } AttrType;
@@ -132,6 +133,8 @@ protected:
 
 private:
   static RecordBasedFileManager *_rbf_manager;
+  map<string, StorageFlag> fileStorage;                       //keeps track of which file have been created
+  map<string, StorageFlag>::iterator fileStorageItr;      //map iterator
 };
 
 #endif

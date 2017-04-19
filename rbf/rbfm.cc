@@ -1,4 +1,5 @@
 #include "rbfm.h"
+#include "pfm.h"
 
 RecordBasedFileManager* RecordBasedFileManager::_rbf_manager = 0;
 
@@ -19,22 +20,41 @@ RecordBasedFileManager::~RecordBasedFileManager()
 }
 
 RC RecordBasedFileManager::createFile(const string &fileName) {
+    PagedFileManager * temp = PagedFileManager::instance();                 //access the methods
+    if (!temp->createFile(fileName)) {                                      //return createfile's value, successfully created the file
+        fileStorage[fileName] = isClosed;
+        return 0;
+    }
     return -1;
 }
 
 RC RecordBasedFileManager::destroyFile(const string &fileName) {
-    return -1;
+    PagedFileManager * temp = PagedFileManager::instance();
+    return temp->destroyFile(fileName);
 }
 
 RC RecordBasedFileManager::openFile(const string &fileName, FileHandle &fileHandle) {
-    return -1;
+    PagedFileManager * temp = PagedFileManager::instance();
+    fileStorageItr = fileStorage.find(fileName);
+    if (fileStorageItr == fileStorage.end()) {
+        cout<< "file doesn't exist\n";
+        return -1;
+    }
+    fileStorage[fileName] = isOpen;
+    return temp->openFile(fileName, fileHandle);
 }
 
 RC RecordBasedFileManager::closeFile(FileHandle &fileHandle) {
-    return -1;
+    PagedFileManager * temp = PagedFileManager::instance();
+    if (fileStorage[fileHandle.targetName] == isClosed) {
+        return -1;
+    }
+            fileStorage[fileHandle.targetName] = isClosed;
+            return temp->closeFile(fileHandle);
 }
 
 RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor, const void *data, RID &rid) {
+    
     return -1;
 }
 
