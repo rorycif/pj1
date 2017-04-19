@@ -56,16 +56,16 @@ RC PagedFileManager::openFile(const string &fileName, FileHandle &fileHandle)
     if (it == pfms.end()){
         return -1;                      //file does not exist
     }
+    if (fileHandle.targetName == ""){    	//nothing is open
+        pfms[fileName] = fopen(fileName.c_str(), "r+");
+        fileHandle.isOpen = true;
+        fileHandle.targetName = fileName;
+        fileHandle.pfmPointer = this;
+        return 0;
+    }
     else{
-        if (!fileHandle.isOpen){    	//nothing is open
-        	pfms[fileName] = fopen(fileName.c_str(), "r+");
-            fileHandle.isOpen = true;
-            fileHandle.targetName = fileName;
-            fileHandle.pfmPointer = this;
-            return 0;
-        } else {       					//a file is currently opened
-            return -1;
-        }
+        cout<< "fileHandle is already open to "<< fileHandle.targetName<<endl;
+        return -1;
     }
 }
 
@@ -104,7 +104,7 @@ RC FileHandle::readPage(PageNum pageNum, void *data)
 	if (appendPageCounter < pageNum){
 		return -1;					//the page must not exist
 	}
-    int offSet = pageNum * PAGE_SIZE - PAGE_SIZE;
+    int offSet = (pageNum - 1) * PAGE_SIZE;             //this is where the page begins
     fseek(pfmPointer->pfms[targetName],offSet, SEEK_SET);     //goes to the page to be read
     fread(data,PAGE_SIZE,1,pfmPointer->pfms[targetName]);     //reads page to data pointer
     readPageCounter++;                              //increments counter
@@ -117,9 +117,10 @@ RC FileHandle::writePage(PageNum pageNum, const void *data)
 	if (appendPageCounter < pageNum){
 		return -1;					//page must not exist
 	}
-	//TODO get to page w/ fseek()
-	//write to page using fwrite()
-    //flush 
+    int offset = (pageNum - 1) * PAGE_SIZE;                     //where the page begins
+    fseek(pfmPointer->pfms[targetName],offset, SEEK_SET);       //find page start
+    fwrite(data, PAGE_SIZE,1, pfmPointer->pfms[targetName]);    //write to memory
+    fflush(pfmPointer->pfms[targetName]);                       //commit to disk
     writePageCounter++;                             //increments counter
     return 0;
 }
@@ -127,7 +128,7 @@ RC FileHandle::writePage(PageNum pageNum, const void *data)
 
 RC FileHandle::appendPage(const void *data)
 {
-    fseek(pfmPointer->pfms[targetName],1, SEEK_END);                //find end of file
+    fseek(pfmPointer->pfms[targetName],0, SEEK_END);                //find end of file
     fwrite(data, PAGE_SIZE, 1, pfmPointer->pfms[targetName]);       //write to memory
     fflush(pfmPointer->pfms[targetName]);                           //commit to disk
     appendPageCounter++;                                            //increments counter
@@ -137,21 +138,19 @@ RC FileHandle::appendPage(const void *data)
 
 unsigned FileHandle::getNumberOfPages()
 {
-    return appendPageCounter;
+    FILE *p_file = NULL;
+    p_file = fopen(targetName.c_str(), "rb");
+    fseek(p_file,0,SEEK_END);                                       //get to the last byte
+    int size = ftell(p_file);
+    fclose(p_file);
+    return (size / PAGE_SIZE);                                      //return the page count
 }
 
 
 RC FileHandle::collectCounterValues(unsigned &readPageCount, unsigned &writePageCount, unsigned &appendPageCount)
 {
-    return -1;
-}
-
-Page::Page()
-{
-    freeSize = PAGE_SIZE;
-}
-
-Page::~Page()
-{
-
+    readPageCounter = readPageCount;
+    writePageCounter = writePageCount;
+    appendPageCounter = writePageCount;
+    return 0;
 }

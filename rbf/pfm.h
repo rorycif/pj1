@@ -39,15 +39,6 @@ private:
 
 };
 
-class Page 
-{
-    public:
-        Page();
-        ~Page();
-
-        unsigned freeSize;
-        void * data;
-};
 
 class FileHandle
 {
@@ -60,7 +51,6 @@ public:
     string targetName;                                                    //filename of target
     bool isOpen;                                                          //sees if a file has been open
     PagedFileManager * pfmPointer;
-    vector<Page> pageVector;
 
     FileHandle();                                                         // Default constructor
     ~FileHandle();                                                        // Destructor
