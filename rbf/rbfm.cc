@@ -37,7 +37,7 @@ RC RecordBasedFileManager::openFile(const string &fileName, FileHandle &fileHand
     PagedFileManager * temp = PagedFileManager::instance();
     fileStorageItr = fileStorage.find(fileName);
     if (fileStorageItr == fileStorage.end()) {
-        cout<< "file doesn't exist\n";
+        //cout<< "file doesn't exist\n";
         return -1;
     }
     fileStorage[fileName] = isOpen;
@@ -54,7 +54,17 @@ RC RecordBasedFileManager::closeFile(FileHandle &fileHandle) {
 }
 
 RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor, const void *data, RID &rid) {
-    
+/*    double size = ceil(recordDescriptor.size()/8);                          //finds the size 
+    int n = (int)size;
+    bitset<n> flags;
+    for(int i =0; i < n; i++){
+        if (data[i]){
+                                                       //null flag
+        }
+        else{                                           //non null entry
+
+        }
+    }*/
     return -1;
 }
 
