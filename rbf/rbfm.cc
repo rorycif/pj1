@@ -65,6 +65,10 @@ RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Att
 
         }
     }*/
+    int numOfAttr = recordDescriptor.size();
+    int byteOfNullFlag = ceil(numOfAttr / 8);
+    //bitset<byteOfNullFlag> nullFlags(byteOfNullFlag, data);
+
     return -1;
 }
 
@@ -75,3 +79,27 @@ RC RecordBasedFileManager::readRecord(FileHandle &fileHandle, const vector<Attri
 RC RecordBasedFileManager::printRecord(const vector<Attribute> &recordDescriptor, const void *data) {
     return -1;
 }
+/*
+SlotDirectory::SlotDirectory()
+{
+    recordTotal = 0;
+}
+
+SlotDirectory::~SlotDirectory() 
+{
+}
+
+RC SlotDirectory::setRecord(RID rid) {
+    if (rid.pageNum != pageNum) {
+        return -1;
+    }
+
+    ridDirectory = 
+    ++recordTotal;
+    return -1;
+}
+
+RC SlotDirectory::getRecord(RID rid) {
+    return -1;
+}
+*/

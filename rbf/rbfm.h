@@ -138,5 +138,21 @@ private:
   map<string, StorageFlag> fileStorage;                       //keeps track of which file have been created
   map<string, StorageFlag>::iterator fileStorageItr;      //map iterator
 };
+/*
+class SlotDirectory {
+  public:
+    RC setRecord(RID rid);
+    RC getRecord(RID rid);
 
+  protected:
+    SlotDirectory();
+    ~SlotDirectory();
+
+  private:
+    int freeSpace;
+    int pageNum;
+    int recordTotal;
+    vector<RID> ridDirectory;
+};
+*/
 #endif
