@@ -5,6 +5,9 @@
 #include <vector>
 #include <climits>
 #include <bitset>
+#include <iostream>
+#include <cstdint>
+#include <cstring>
 #include <math.h>
 
 #include "../rbf/pfm.h"
@@ -29,6 +32,7 @@ struct Attribute {
     string   name;     // attribute name
     AttrType type;     // attribute type
     AttrLength length; // attribute length
+    bool isNull;       // used when reading
 };
 
 // Comparison Operator (NOT needed for part 1 of the project)
@@ -138,21 +142,5 @@ private:
   map<string, StorageFlag> fileStorage;                       //keeps track of which file have been created
   map<string, StorageFlag>::iterator fileStorageItr;      //map iterator
 };
-/*
-class SlotDirectory {
-  public:
-    RC setRecord(RID rid);
-    RC getRecord(RID rid);
 
-  protected:
-    SlotDirectory();
-    ~SlotDirectory();
-
-  private:
-    int freeSpace;
-    int pageNum;
-    int recordTotal;
-    vector<RID> ridDirectory;
-};
-*/
 #endif
