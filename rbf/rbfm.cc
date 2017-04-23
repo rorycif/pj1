@@ -54,18 +54,49 @@ RC RecordBasedFileManager::closeFile(FileHandle &fileHandle) {
 }
 
 RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor, const void *data, RID &rid) {
-/*    double size = ceil(recordDescriptor.size()/8);                          //finds the size 
-    int n = (int)size;
-    bitset<n> flags;
-    for(int i =0; i < n; i++){
-        if (data[i]){
-                                                       //null flag
+    float attributeTotal = recordDescriptor.size();      //number of bytes null flags take
+    int nullbytes = ceil(attributeTotal / 8);            //the amount of bytes holding flags
+    bool nullflag[nullbytes*8];                              //additional flags that check for nulls
+    if (!nullbytes)                                      
+        return -1;                                       //no records exist
+    char * curentbyte = (char*)data;                   
+    for (int i = 0;i < nullbytes; i++){
+        if(curentbyte[i] & 0b10000000){                    //first bit
+            nullflag[0+(i*8)] = true;
+//            cout<< (0+(i*8))<<" is null\n";
         }
-        else{                                           //non null entry
-
+        if(curentbyte[i] & 0b01000000){                    //second bit
+            nullflag[1+(i*8)] = true;
+//            cout<< (1+(i*8))<<" is null\n";
         }
-    }*/
-    return -1;
+        if(curentbyte[i] & 0b00100000){                    //third bit
+            nullflag[2+(i*8)] = true;
+//            cout<< (2+(i*8))<<" is null\n";
+        }
+        if(curentbyte[i] & 0b00010000){                    //fourth bit
+            nullflag[3+(i*8)] = true;
+//            cout<< (3+(i*8))<<" is null\n";
+        }
+        if(curentbyte[i] & 0b00001000){                    //fifth bit
+            nullflag[4+(i*8)] = true;
+//            cout<< (4+(i*8))<<" is null\n";
+        }
+        if(curentbyte[i] & 0b00000100){                    //sixth bit
+            nullflag[5+(i*8)] = true;
+//            cout<< (5+(i*8))<<" is null\n";
+        }
+        if(curentbyte[i] & 0b00000010){                    //seventh bit
+            nullflag[6+(i*8)] = true;
+//            cout<< (6+(i*8))<<" is null\n";
+        }
+        if(curentbyte[i] & 0b00000001){                    //eigth bit
+            nullflag[7+(i*8)] = true;
+//            cout<< (7+(i*8))<<" is null\n";
+        }
+        data += sizeof(char);               //the flag byte has been used up, set pointer to next place                                   
+    }
+    cout<<" total null bytes "<<nullbytes<<endl;
+    return 0;
 }
 
 RC RecordBasedFileManager::readRecord(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor, const RID &rid, void *data) {
@@ -82,35 +113,35 @@ RC RecordBasedFileManager::printRecord(const vector<Attribute> &recordDescriptor
     for (int i = 0;i < nullbytes; i++){
         if(curentbyte[i] & 0b10000000){                    //first bit
             nullflag[0+(i*8)] = true;
-            cout<< (0+(i*8))<<" is null\n";
+//            cout<< (0+(i*8))<<" is null\n";
         }
         if(curentbyte[i] & 0b01000000){                    //second bit
             nullflag[1+(i*8)] = true;
-            cout<< (1+(i*8))<<" is null\n";
+//            cout<< (1+(i*8))<<" is null\n";
         }
         if(curentbyte[i] & 0b00100000){                    //third bit
             nullflag[2+(i*8)] = true;
-            cout<< (2+(i*8))<<" is null\n";
+//            cout<< (2+(i*8))<<" is null\n";
         }
         if(curentbyte[i] & 0b00010000){                    //fourth bit
             nullflag[3+(i*8)] = true;
-            cout<< (3+(i*8))<<" is null\n";
+//            cout<< (3+(i*8))<<" is null\n";
         }
         if(curentbyte[i] & 0b00001000){                    //fifth bit
             nullflag[4+(i*8)] = true;
-            cout<< (4+(i*8))<<" is null\n";
+//            cout<< (4+(i*8))<<" is null\n";
         }
         if(curentbyte[i] & 0b00000100){                    //sixth bit
             nullflag[5+(i*8)] = true;
-            cout<< (5+(i*8))<<" is null\n";
+//            cout<< (5+(i*8))<<" is null\n";
         }
         if(curentbyte[i] & 0b00000010){                    //seventh bit
             nullflag[6+(i*8)] = true;
-            cout<< (6+(i*8))<<" is null\n";
+//            cout<< (6+(i*8))<<" is null\n";
         }
         if(curentbyte[i] & 0b00000001){                    //eigth bit
             nullflag[7+(i*8)] = true;
-            cout<< (7+(i*8))<<" is null\n";
+//            cout<< (7+(i*8))<<" is null\n";
         }
         data += sizeof(char);               //the flag byte has been used up, set pointer to next place                                   
     }
@@ -133,10 +164,12 @@ RC RecordBasedFileManager::printRecord(const vector<Attribute> &recordDescriptor
                         data += sizeof(float);                                  //move on to next
                         break;
                 case(TypeVarChar):
+                        tempInt = (int *)data;                              //cast the size of varchar
+                        data += sizeof(int);
                         tempChar = (char *)data;
-                        for (unsigned j = 0 ; j < recordDescriptor[i].length; j++){     //concatiate string
+                        for (unsigned j = 0 ; j < tempInt[0]; j++){     //concatiate string
                             charout += tempChar[j];
-                            cout << "varchar length: "<<j<< endl;
+                            //cout << "varchar length: "<<j<< endl;
                             lengthof++;
                         }
                         cout<<"    "<< recordDescriptor[i].name<< ": "<< charout;
@@ -151,51 +184,13 @@ RC RecordBasedFileManager::printRecord(const vector<Attribute> &recordDescriptor
         }
     }
     cout<< "\n";
-//    char t = curentbyte[0];
-//    bitset<8> rawbits;
-//    memcpy(&rawbits,&t,8);
-//    cout<< rawbits<<endl;
-
-
-
-
-
-/*        int totalBytes = 0;                                 //total bytes in record
-//    cout << attributeTotal<< " attributes with " << nullbytes<< " byte to check \n";
-    bitset<16> nullflags;                                //can hold up to 16 null flags
-//    unsigned char test = 0b1101;
-    memcpy(&nullflags,data,16);
-    for (int i = 0; i < attributeTotal ; i++){
-        if (nullflags[i])
-            cout<< nullflags[i]<< " attribute "<< (attributeTotal-i) << " is null\n";
- //           recordDescriptor[attributeTotal-i-1].isNull = true;                         //set null flag for attribute
-        else{
-            //cout<< nullflags[i]<< " attibute "<< (attributeTotal-i)<< " is not null\n";     //increments the total byte count
-            switch(recordDescriptor[attributeTotal-i-1].type){
-                case TypeInt: totalBytes += sizeof(int);
-                    cout<<recordDescriptor[attributeTotal-i-1].name<< " new byte count "<< totalBytes<< endl;
-                    break;
-                case TypeReal: totalBytes += sizeof(float);
-                    cout<<recordDescriptor[attributeTotal-i-1].name<< " new byte count "<< totalBytes<< endl;
-                    break;
-                case TypeVarChar: totalBytes += recordDescriptor[attributeTotal-i].length;
-                    cout<<recordDescriptor[attributeTotal-i-1].name<< " new byte count "<< totalBytes<< endl;
-                    break;
-            }
-        }
-    }
-    cout<< "total bytes = "<< (totalBytes + nullbytes)<< endl;
-    bitset<512> rawbits;                                        //take memory from data
-    memcpy(&rawbits,data,totalBytes+nullbytes);                 //allocate
-//    cout<< "stream "<< rawbits<< endl;
-    rawbits >>= (nullbytes*8);                                  //move over null flags
-//    cout<< "stream "<< rawbits<< endl;
-    for (unsigned i =0; i< recordDescriptor.size(); i++){
-//        cout << "attribute "<< i << " "<< recordDescriptor[i].name << " " << recordDescriptor[i].type << " "<< recordDescriptor[i].length << endl;
-    }
-//    while(1){
-
-  //  }*/
-
     return 0;
+}
+
+SlotDirectory::SlotDirectory(){
+
+}
+
+SlotDirectory::~SlotDirectory(){
+
 }

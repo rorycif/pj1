@@ -143,4 +143,14 @@ private:
   map<string, StorageFlag>::iterator fileStorageItr;      //map iterator
 };
 
+class SlotDirectory
+{
+  public:
+    unsigned pageNum;
+    vector<RID*> RIDs;
+    int freespace;
+    SlotDirectory();
+    ~SlotDirectory();
+};
+
 #endif
