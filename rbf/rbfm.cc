@@ -143,6 +143,15 @@ RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Att
 }
 
 RC RecordBasedFileManager::readRecord(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor, const RID &rid, void *data) {
+    //the pgae of the record does not exist
+    if (fileHandle.masterDirectory[rid.pageNum] == 0) {
+      return -1;
+    }
+    SlotDirectory* pageDirectory = fileHandle.masterDirectory[rid.pageNum];
+    //the record (slot number) does not exist in the page
+    if (pageDirectory->findRecord(rid, data)) {
+      return 0;
+    }
     return -1;
 }
 

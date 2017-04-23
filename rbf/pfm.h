@@ -38,8 +38,6 @@ protected:
 
 private:
     static PagedFileManager *_pf_manager;
-
-
 };
 
 
@@ -54,7 +52,7 @@ public:
     string targetName;                                                    //filename of target
     bool isOpen;                                                          //sees if a file has been open
     PagedFileManager * pfmPointer;
-    vector <SlotDirectory*> masterDirectory;                              //holds all the slot directories
+    map <unsigned, SlotDirectory*> masterDirectory;                       //holds all the slot directories
 
     FileHandle();                                                         // Default constructor
     ~FileHandle();                                                        // Destructor
