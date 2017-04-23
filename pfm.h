@@ -12,8 +12,12 @@ typedef char byte;
 #include <fstream>
 #include <iostream>
 #include <climits>
+#include <vector>
+
+
 using namespace std;
 
+class SlotDirectory;
 class FileHandle;
 
 class PagedFileManager
@@ -25,6 +29,8 @@ public:
     RC destroyFile   (const string &fileName);                            // Destroy a file
     RC openFile      (const string &fileName, FileHandle &fileHandle);    // Open a file
     RC closeFile     (FileHandle &fileHandle);                            // Close a file
+    map <string, FILE*> pfms;
+	map<string, FILE*>::iterator it;
 
 protected:
     PagedFileManager();                                                   // Constructor
@@ -32,8 +38,8 @@ protected:
 
 private:
     static PagedFileManager *_pf_manager;
-    map <string, int> pfms;
-    map<string, int>::iterator it;
+
+
 };
 
 
@@ -44,10 +50,12 @@ public:
     unsigned readPageCounter;
     unsigned writePageCounter;
     unsigned appendPageCounter;
-    
+
     string targetName;                                                    //filename of target
     bool isOpen;                                                          //sees if a file has been open
-    
+    PagedFileManager * pfmPointer;
+    vector <SlotDirectory*> masterDirectory;                              //holds all the slot directories
+
     FileHandle();                                                         // Default constructor
     ~FileHandle();                                                        // Destructor
 
@@ -56,6 +64,6 @@ public:
     RC appendPage(const void *data);                                      // Append a specific page
     unsigned getNumberOfPages();                                          // Get the number of pages in the file
     RC collectCounterValues(unsigned &readPageCount, unsigned &writePageCount, unsigned &appendPageCount);  // Put the current counter values into variables
-}; 
+};
 
 #endif
