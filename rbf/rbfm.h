@@ -147,9 +147,15 @@ class SlotDirectory
 {
   public:
     unsigned pageNum;
-    vector<RID*> RIDs;
-    int freespace;
-    SlotDirectory();
+    unsigned numOfRecord;
+    vector<void *> RIDs;
+    unsigned freespace;
+
+    RC addRecord(RID rid, void * data, unsigned sizeOfData);
+    //RC deleteRecord(RID rid);
+    RC findRecord(RID rid, void * data);
+
+    SlotDirectory(unsigned pageNum);
     ~SlotDirectory();
 };
 

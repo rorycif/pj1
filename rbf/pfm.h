@@ -13,8 +13,11 @@ typedef char byte;
 #include <iostream>
 #include <climits>
 #include <vector>
+
+
 using namespace std;
 
+class SlotDirectory;
 class FileHandle;
 
 class PagedFileManager
@@ -51,6 +54,7 @@ public:
     string targetName;                                                    //filename of target
     bool isOpen;                                                          //sees if a file has been open
     PagedFileManager * pfmPointer;
+    vector <SlotDirectory*> masterDirectory;                              //holds all the slot directories
 
     FileHandle();                                                         // Default constructor
     ~FileHandle();                                                        // Destructor
