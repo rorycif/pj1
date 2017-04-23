@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstring>
 #include <math.h>
+#include <map>
 
 #include "../rbf/pfm.h"
 
@@ -148,7 +149,7 @@ class SlotDirectory
   public:
     unsigned pageNum;
     unsigned numOfRecord;
-    vector<void *> RIDs;
+    map<unsigned, void *> RIDs;                               //find the data location by rid.slotNum
     unsigned freespace;
 
     RC addRecord(RID rid, void * data, unsigned sizeOfData);
