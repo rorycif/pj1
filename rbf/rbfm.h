@@ -14,6 +14,7 @@
 
 using namespace std;
 
+
 typedef enum {isOpen, isClosed} StorageFlag;
 
 // Record ID
@@ -77,7 +78,8 @@ public:
 class RecordBasedFileManager
 {
 public:
-
+  map <string, vector<SlotDirectory*>> oldfiles;                 //for preserving opened and closed files
+  map <string, vector<SlotDirectory*>>::iterator oIt;
   map<string,FILE *> rbfms;                           //pointers to files for rbfm
   map<string,FILE *>::iterator it;                         //map iterator
   static RecordBasedFileManager* instance();

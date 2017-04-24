@@ -176,7 +176,7 @@ int FileHandle::getAvailablePage(unsigned size){
         offset.push_back(0);   //add what the offest is
         return 0;
     }
-    cout<< "checking though this many pages: "<< masterDirectory.size()<<endl;
+//    cout<< "checking though this many pages: "<< masterDirectory.size()<<endl;
     for (unsigned i = 0; i < masterDirectory.size(); i++){    //itate through all slot directories
 //        cout << "In page " << getNumberOfPages() << ", it has freespace " << masterDirectory[i]->freespace << endl;
         if(PAGE_SIZE - offset[i] >= size){
