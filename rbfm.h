@@ -77,6 +77,9 @@ public:
 class RecordBasedFileManager
 {
 public:
+
+  map<string,FILE *> rbfms;                           //pointers to files for rbfm
+  map<string,FILE *>::iterator it;                         //map iterator
   static RecordBasedFileManager* instance();
 
   RC createFile(const string &fileName);
@@ -146,16 +149,12 @@ private:
 class SlotDirectory
 {
   public:
-    unsigned pageNum;
-    unsigned numOfRecord;
-    vector<void *> RIDs;
+    unsigned pageNum;             //corresponding page number
+    unsigned numOfRecord;         //how many records on page
+    vector<int> individualOff;          //stores individual offsets
     unsigned freespace;
 
-    RC addRecord(RID rid, void * data, unsigned sizeOfData);
-    //RC deleteRecord(RID rid);
-    RC findRecord(RID rid, void * data);
-
-    SlotDirectory(unsigned pageNum);
+    SlotDirectory(unsigned Num);
     ~SlotDirectory();
 };
 

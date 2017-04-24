@@ -20,139 +20,224 @@ RecordBasedFileManager::~RecordBasedFileManager()
 }
 
 RC RecordBasedFileManager::createFile(const string &fileName) {
-    PagedFileManager * temp = PagedFileManager::instance();                 //access the methods
-    if (!temp->createFile(fileName)) {                                      //return createfile's value, successfully created the file
-        fileStorage[fileName] = isClosed;
-        return 0;
+	it = rbfms.find(fileName);
+	if (it == rbfms.end()){              //file not found
+	   rbfms[fileName] = fopen(fileName.c_str(), "w");                //creates blank file
+	   fclose(rbfms[fileName]);                    //closes file after create
+	   return 0;
     }
-    return -1;
+    else{
+        return -1;
+    }
 }
 
 RC RecordBasedFileManager::destroyFile(const string &fileName) {
-    PagedFileManager * temp = PagedFileManager::instance();
-    return temp->destroyFile(fileName);
+    it = rbfms.find(fileName);
+    if (it == rbfms.end()){              //file not found
+	   return -1;
+    }
+    remove(fileName.c_str());       //delete file
+    rbfms.erase(fileName);           //remove from map
+    return 0;
 }
 
 RC RecordBasedFileManager::openFile(const string &fileName, FileHandle &fileHandle) {
-    PagedFileManager * temp = PagedFileManager::instance();
-    fileStorageItr = fileStorage.find(fileName);
-    if (fileStorageItr == fileStorage.end()) {
-        //cout<< "file doesn't exist\n";
+    it = rbfms.find(fileName);
+    if (it == rbfms.end()){
+        return -1;                      //file does not exist
+    }
+    if (fileHandle.targetName == ""){    	//nothing is open
+        rbfms[fileName] = fopen(fileName.c_str(), "r+");
+        fileHandle.isOpen = true;
+        fileHandle.targetName = fileName;
+//        cout<< "opened: "<< fileHandle.targetName<<endl;
+        return 0;
+    }
+    else{
+//        cout<< "fileHandle is already open to "<< fileHandle.targetName<<endl;
         return -1;
     }
-    fileStorage[fileName] = isOpen;
-    return temp->openFile(fileName, fileHandle);
 }
 
 RC RecordBasedFileManager::closeFile(FileHandle &fileHandle) {
-    PagedFileManager * temp = PagedFileManager::instance();
-    if (fileStorage[fileHandle.targetName] == isClosed) {
-        return -1;
+    it = rbfms.find(fileHandle.targetName);
+    if (it == rbfms.end()){
+        return -1;                      			//file does not exist
     }
-            fileStorage[fileHandle.targetName] = isClosed;
-            return temp->closeFile(fileHandle);
+    fflush(rbfms[fileHandle.targetName]);            //flushes everything changed to file
+    fclose(rbfms[fileHandle.targetName]);
+    fileHandle.targetName = "";                     //empty refrence
+    fileHandle.isOpen = false;
+//    cout<< "closed record file\n";                      //handle has closed file
+    return 0;
 }
 
 RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor, const void *data, RID &rid) {
     float attributeTotal = recordDescriptor.size();      //number of bytes null flags take
-    int nullbytes = ceil(attributeTotal / 8);            //the amount of bytes holding flags
-    bool nullflag[nullbytes*8];                              //additional flags that check for nulls
-    int size = nullbytes;
-    if (!nullbytes)                                      
+    char * tempdata = (char *)data;                      //to iterate without lossing original pointer
+    unsigned nullbytes = ceil(attributeTotal / 8);            //the amount of bytes holding flags
+    vector <bool> nullflag;                              //additional flags that check for nulls
+    unsigned size = (unsigned)nullbytes;
+    if (!nullbytes){                                      
         return -1;                                       //no records exist
-    char * curentbyte = (char*)data;                   
-    for (int i = 0;i < nullbytes; i++){
-        if(curentbyte[i] & 0b10000000){                    //first bit
-            nullflag[0+(i*8)] = true;
+    }
+    char * currentbyte = (char*)tempdata;
+//    cout<< "total null bytes = "<<nullbytes<<endl;                 
+    for (unsigned i = 0;i < nullbytes; i++){
+//        cout<< "checking nullbyte "<< i<<endl;
+        if(currentbyte[i] & 0b10000000){                    //first bit
+            nullflag.push_back(true);
 //            cout<< (0+(i*8))<<" is null\n";
         }
-        if(curentbyte[i] & 0b01000000){                    //second bit
-            nullflag[1+(i*8)] = true;
+        else{
+            nullflag.push_back(false);
+        }
+        if(currentbyte[i] & 0b01000000){                    //second bit
+            nullflag.push_back(true);
 //            cout<< (1+(i*8))<<" is null\n";
         }
-        if(curentbyte[i] & 0b00100000){                    //third bit
-            nullflag[2+(i*8)] = true;
+        else{
+            nullflag.push_back(false);
+        }
+        if(currentbyte[i] & 0b00100000){                    //third bit
+            nullflag.push_back(true);
 //            cout<< (2+(i*8))<<" is null\n";
         }
-        if(curentbyte[i] & 0b00010000){                    //fourth bit
-            nullflag[3+(i*8)] = true;
+        else{
+            nullflag.push_back(false);
+        }
+        if(currentbyte[i] & 0b00010000){                    //fourth bit
+            nullflag.push_back(true);
 //            cout<< (3+(i*8))<<" is null\n";
         }
-        if(curentbyte[i] & 0b00001000){                    //fifth bit
-            nullflag[4+(i*8)] = true;
+        else{
+            nullflag.push_back(false);
+        }
+        if(currentbyte[i] & 0b00001000){                    //fifth bit
+            nullflag.push_back(true);
 //            cout<< (4+(i*8))<<" is null\n";
         }
-        if(curentbyte[i] & 0b00000100){                    //sixth bit
-            nullflag[5+(i*8)] = true;
+        else{
+            nullflag.push_back(false);
+        }
+        if(currentbyte[i] & 0b00000100){                    //sixth bit
+            nullflag.push_back(true);
 //            cout<< (5+(i*8))<<" is null\n";
         }
-        if(curentbyte[i] & 0b00000010){                    //seventh bit
-            nullflag[6+(i*8)] = true;
+        else{
+            nullflag.push_back(false);
+        }
+        if(currentbyte[i] & 0b00000010){                    //seventh bit
+            nullflag.push_back(true);
 //            cout<< (6+(i*8))<<" is null\n";
         }
-        if(curentbyte[i] & 0b00000001){                    //eigth bit
-            nullflag[7+(i*8)] = true;
+        else{
+            nullflag.push_back(false);
+        }
+        if(currentbyte[i] & 0b00000001){                    //eigth bit
+            nullflag.push_back(true);
 //            cout<< (7+(i*8))<<" is null\n";
         }
-        data += sizeof(char);               //the flag byte has been used up, set pointer to next place                                   
+        else{
+            nullflag.push_back(false);
+        }
+        tempdata += sizeof(char);               //the flag byte has been used up, set pointer to next place
+        size += sizeof(char);                                   
     }
     int * tempInt;                          //used for casting to int
-    float * tempFloat;                      //casts to float
     char * tempChar;                        //cast to chars
     int lengthof = 0;                       //running count of varchar length
     string charout = "";                    //output string
-    for (int i = 0; i < recordDescriptor.size(); i++){
+//    cout<< "done checking nulls\n";
+//    cout<<"for "<<size<< " to "<< recordDescriptor.size()<<"should equal "<<nullflag.size()<<endl;
+    for (unsigned i = 0; i < recordDescriptor.size(); i++){
+//        cout<< recordDescriptor[i].name<<" is";
         if(!nullflag[i]){                       //attribute is not null
+//            cout<< " not null\n";
             switch(recordDescriptor[i].type){
                 case(TypeInt):
-                        tempInt = (int *)data;                                    //cast to int
-//                        cout<<"    "<< recordDescriptor[i].name<< ": "<< tempInt[0];
-                        data += sizeof(int);                                    //move on to next
+                        tempInt = (int *)tempdata;                                    //cast to int
+                        tempdata += sizeof(int);                                    //move on to next
                         size += sizeof(int);
                         break;
                 case(TypeReal):
-                        tempFloat = (float *)data;                                //cast to float
-//                        cout<<"    "<< recordDescriptor[i].name<< ": "<< tempFloat[0];
-                        data += sizeof(float);                                  //move on to next
+                        tempdata += sizeof(float);                                  //move on to next
                         size += sizeof(float);
                         break;
                 case(TypeVarChar):
-                        tempInt = (int *)data;                              //cast the size of varchar
-                        data += sizeof(int);
-                        tempChar = (char *)data;
-                        for (unsigned j = 0 ; j < tempInt[0]; j++){     //concatiate string
+                        tempInt = (int *)tempdata;                              //cast the size of varchar
+                        tempdata += sizeof(int);
+                        size += sizeof(int);
+                        tempChar = (char *)tempdata;
+                        for (unsigned j = 0 ; j < (unsigned)tempInt[0]; j++){     //concatiate string
                             charout += tempChar[j];
-                            //cout << "varchar length: "<<j<< endl;
                             lengthof++;
                         }
-//                        cout<<"    "<< recordDescriptor[i].name<< ": "<< charout;
-                        data += lengthof;                                           //move that many bytes
+                        tempdata += lengthof;                                           //move that many bytes
                         size += lengthof;
                         lengthof = 0;                                               //reset counter
                         charout = "";                                           //output reset
                         break;
             }
+
         }
         else{                               
-//            cout<< "    "<<recordDescriptor[i].name<<": NULL";
+//            cout<< " null\n";
         }
     }
-    cout<<"total bytes "<<size<<endl;
-    
+    int available = fileHandle.getAvailablePage(size);
+    int prevOff = fileHandle.offset[available];
+//    cout<<"total bytes "<<size<<" will be inserted into "<< available<< endl;
+    fseek(rbfms[fileHandle.targetName],(PAGE_SIZE * available) + prevOff,SEEK_SET);
+    fwrite(data,size,1,rbfms[fileHandle.targetName]);
+    fflush(rbfms[fileHandle.targetName]);
+    fileHandle.offset[available] = prevOff + size;                   //increments where free space begins
+    fileHandle.masterDirectory[available]->numOfRecord++;
+    rid.pageNum = available;                                            //update rid values
+    rid.slotNum = fileHandle.masterDirectory[available]->numOfRecord;
+    fileHandle.masterDirectory[available]->individualOff.push_back(size);
+//    cout<< "file "<<fileHandle.targetName << " now has this many records "<< fileHandle.masterDirectory[available]->numOfRecord<< " new offset on page "<< available <<" is "<< fileHandle.offset[available]<< endl;
+//    cout<< "inserted into slot, page "<< rid.slotNum << " "<< rid.pageNum<<endl;
     return 0;
 }
 
 RC RecordBasedFileManager::readRecord(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor, const RID &rid, void *data) {
-    return -1;
+   //the page or slot does not exist
+//   cout<< "slot and page "<< rid.slotNum<< " "<<rid.pageNum<<endl;
+   if (rid.pageNum > fileHandle.getNumberOfPages() || rid.slotNum > fileHandle.masterDirectory[rid.pageNum]->numOfRecord) {
+     return -1;
+   }
+   //sum individual offsets
+   int sum = 0;                                     //offset within page
+   for (unsigned i = 0 ; i<rid.slotNum-1; i++){
+        sum += fileHandle.masterDirectory[rid.pageNum]->individualOff[i];
+   }
+   int offset = (rid.pageNum * PAGE_SIZE) + sum;    //from beigning of file
+   int end = offset + fileHandle.masterDirectory[rid.pageNum]->individualOff[rid.slotNum-1];
+//   cout<<"slot offset "<< offset<< " end in "<< end<<endl;
+   fseek(rbfms[fileHandle.targetName],offset,SEEK_SET);
+   fread(data,end,1,rbfms[fileHandle.targetName]);
+//   cout<< sum<<" here\n";
+   //read from page
+//   cout<< "number of attributes: "<< recordDescriptor.size()<<endl;
+   for (unsigned i = 0; i < recordDescriptor.size(); i++){
+//        cout<<i<< " "<< recordDescriptor[i].name<<endl;
+   }
+//   cout<< "read record\n";
+//    printRecord(recordDescriptor, data);
+   return 0;
+
 }
 
 RC RecordBasedFileManager::printRecord(const vector<Attribute> &recordDescriptor, const void *data) {
     float attributeTotal = recordDescriptor.size();      //number of bytes null flags take
+    int size =0;
+    char * tempdata = (char*)data;
     int nullbytes = ceil(attributeTotal / 8);            //the amount of bytes holding flags
     bool nullflag[nullbytes*8];                              //additional flags that check for nulls
     if (!nullbytes)                                      
         return -1;                                       //no records exist
-    char * curentbyte = (char*)data;                   
+    char * curentbyte = tempdata;                   
     for (int i = 0;i < nullbytes; i++){
         if(curentbyte[i] & 0b10000000){                    //first bit
             nullflag[0+(i*8)] = true;
@@ -186,37 +271,43 @@ RC RecordBasedFileManager::printRecord(const vector<Attribute> &recordDescriptor
             nullflag[7+(i*8)] = true;
 //            cout<< (7+(i*8))<<" is null\n";
         }
-        data += sizeof(char);               //the flag byte has been used up, set pointer to next place                                   
+        tempdata += sizeof(char);               //the flag byte has been used up, set pointer to next place
+        size += sizeof(char);
+        cout<< "size of nulls"<< size<<endl;                                   
     }
     int * tempInt;                          //used for casting to int
     float * tempFloat;                      //casts to float
     char * tempChar;                        //cast to chars
     int lengthof = 0;                       //running count of varchar length
     string charout = "";                    //output string
-    for (int i = 0; i < recordDescriptor.size(); i++){
+    for (unsigned i = 0; i < recordDescriptor.size(); i++){
         if(!nullflag[i]){                       //attribute is not null
             switch(recordDescriptor[i].type){
                 case(TypeInt):
-                        tempInt = (int *)data;                                    //cast to int
+                        tempInt = (int *)tempdata;                                    //cast to int
                         cout<<"    "<< recordDescriptor[i].name<< ": "<< tempInt[0];
-                        data += sizeof(int);                                    //move on to next
+                        tempdata += sizeof(int);                                    //move on to next
+                        size += sizeof(int);
                         break;
                 case(TypeReal):
-                        tempFloat = (float *)data;                                //cast to float
+                        tempFloat = (float *)tempdata;                                //cast to float
                         cout<<"    "<< recordDescriptor[i].name<< ": "<< tempFloat[0];
-                        data += sizeof(float);                                  //move on to next
+                        tempdata += sizeof(float);                                  //move on to next
+                        size += sizeof(float);
                         break;
                 case(TypeVarChar):
-                        tempInt = (int *)data;                              //cast the size of varchar
-                        data += sizeof(int);
-                        tempChar = (char *)data;
-                        for (unsigned j = 0 ; j < tempInt[0]; j++){     //concatiate string
+                        tempInt = (int *)tempdata;                              //cast the size of varchar
+                        tempdata += sizeof(int);
+                        size += sizeof(int);
+                        tempChar = (char *)tempdata;
+                        for (unsigned j = 0 ; j < (unsigned)tempInt[0]; j++){     //concatiate string
                             charout += tempChar[j];
                             //cout << "varchar length: "<<j<< endl;
                             lengthof++;
                         }
                         cout<<"    "<< recordDescriptor[i].name<< ": "<< charout;
-                        data += lengthof;                                           //move that many bytes
+                        tempdata += lengthof;                                           //move that many bytes
+                        size += lengthof;
                         lengthof = 0;                                               //reset counter
                         charout = "";                                           //output reset
                         break;
@@ -226,49 +317,16 @@ RC RecordBasedFileManager::printRecord(const vector<Attribute> &recordDescriptor
             cout<< "    "<<recordDescriptor[i].name<<": NULL";
         }
     }
+//    cout<< "\n printsize "<< size<<endl;
     cout<< "\n";
     return 0;
 }
 
-SlotDirectory::SlotDirectory(unsigned pageNum){
-    this->pageNum = pageNum;
-    this->numOfRecord = 0;
-    this->freespace = PAGE_SIZE;
+SlotDirectory::SlotDirectory(unsigned Num){
+    pageNum = Num;
+    numOfRecord = 0;
+    freespace = PAGE_SIZE;
 }
 
 SlotDirectory::~SlotDirectory(){
-}
-
-RC SlotDirectory::addRecord(RID rid, void * data, unsigned sizeOfData) {
-    //check if the record belong to this page
-    if (rid.pageNum != this->pageNum) {
-        return -1;
-    }
-    //check if the page has enough space
-    if (sizeOfData > this->freespace) {
-        return -1;
-    }
-
-    this->RIDs[rid.pageNum] = data;
-    this->numOfRecord+=1;
-    this->freespace-=sizeOfData;
-    return 0;
-}
-
-RC SlotDirectory::findRecord(RID rid, void * data) {
-    //check if the record is in this page
-    if (rid.pageNum != this->pageNum) {
-        return -1;
-    }
-    //no recrod in the page
-    if (this->numOfRecord == 0) {
-        return -1;
-    }
-    //return the address to the data if it is found
-    if (this->RIDs[rid.slotNum]) {
-        data = this->RIDs[rid.slotNum];
-        return 0;
-    } else {
-        return -1;
-    }
 }
