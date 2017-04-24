@@ -46,17 +46,17 @@ RC RecordBasedFileManager::openFile(const string &fileName, FileHandle &fileHand
     if (it == rbfms.end()){
         return -1;                      //file does not exist
     }
-    if (fileHandle.targetName == ""){    	//nothing is open
-        rbfms[fileName] = fopen(fileName.c_str(), "r+");
-        fileHandle.isOpen = true;
-        fileHandle.targetName = fileName;
-//        cout<< "opened: "<< fileHandle.targetName<<endl;
+    oIt = oldfiles.find(fileName);
+    if(oIt != oldfiles.end()){          //retrieve old data
+        fileHandle.masterDirectory = oldfiles[fileName];
+        cout<< "hurr\n";
         return 0;
     }
-    else{
-//        cout<< "fileHandle is already open to "<< fileHandle.targetName<<endl;
-        return -1;
-    }
+    //nothing is open
+    rbfms[fileName] = fopen(fileName.c_str(), "r+");
+    fileHandle.isOpen = true;
+    fileHandle.targetName = fileName;
+    return 0;
 }
 
 RC RecordBasedFileManager::closeFile(FileHandle &fileHandle) {
@@ -66,8 +66,9 @@ RC RecordBasedFileManager::closeFile(FileHandle &fileHandle) {
     }
     fflush(rbfms[fileHandle.targetName]);            //flushes everything changed to file
     fclose(rbfms[fileHandle.targetName]);
-    fileHandle.targetName = "";                     //empty refrence
-    fileHandle.isOpen = false;
+    oldfiles[fileHandle.targetName] = fileHandle.masterDirectory; 
+//    fileHandle.targetName = "";                     //empty refrence
+//    fileHandle.isOpen = false;
 //    cout<< "closed record file\n";                      //handle has closed file
     return 0;
 }
@@ -196,7 +197,7 @@ RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Att
     rid.pageNum = available;                                            //update rid values
     rid.slotNum = fileHandle.masterDirectory[available]->numOfRecord;
     fileHandle.masterDirectory[available]->individualOff.push_back(size);
-//    cout<< "file "<<fileHandle.targetName << " now has this many records "<< fileHandle.masterDirectory[available]->numOfRecord<< " new offset on page "<< available <<" is "<< fileHandle.offset[available]<< endl;
+//    cout<< "file "<<fileHandle.targetName << " now has this many records "<< fileHandle.masterDirectory[available]->numOfRecord<< " new offset on page "<< available <<" is "<< fileHandle.offset[available]<< " new offset added = "<< fileHandle.masterDirectory[available]->individualOff.back()<<endl;
 //    cout<< "inserted into slot, page "<< rid.slotNum << " "<< rid.pageNum<<endl;
     return 0;
 }
@@ -204,17 +205,28 @@ RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Att
 RC RecordBasedFileManager::readRecord(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor, const RID &rid, void *data) {
    //the page or slot does not exist
 //   cout<< "slot and page "<< rid.slotNum<< " "<<rid.pageNum<<endl;
-   if (rid.pageNum > fileHandle.getNumberOfPages() || rid.slotNum > fileHandle.masterDirectory[rid.pageNum]->numOfRecord) {
+/*   if (rid.pageNum > fileHandle.getNumberOfPages() || rid.slotNum > fileHandle.masterDirectory[rid.pageNum]->numOfRecord) {
      return -1;
-   }
+   }*/
    //sum individual offsets
    int sum = 0;                                     //offset within page
-   for (unsigned i = 0 ; i<rid.slotNum-1; i++){
+   int end = 0;
+   int offset = 0;
+   for (unsigned i = 0 ; i < rid.slotNum-1; i++){
         sum += fileHandle.masterDirectory[rid.pageNum]->individualOff[i];
    }
-   int offset = (rid.pageNum * PAGE_SIZE) + sum;    //from beigning of file
-   int end = offset + fileHandle.masterDirectory[rid.pageNum]->individualOff[rid.slotNum-1];
-//   cout<<"slot offset "<< offset<< " end in "<< end<<endl;
+
+//   for (unsigned i = 0 ; i<rid.slotNum-1; i++){
+//        sum += rid.pageNum;
+//   }
+   offset += (rid.pageNum * PAGE_SIZE) + sum;    //from beigning of file
+   for (unsigned i =0; i < fileHandle.masterDirectory[rid.pageNum]->individualOff.size(); i++){
+       cout<< "offset number "<<i<< " is "<< fileHandle.masterDirectory[rid.pageNum]->individualOff[i]<<endl;
+   }
+   
+   cout<< "what "<< fileHandle.masterDirectory[rid.pageNum]->individualOff[rid.slotNum-1]<<endl;
+   end = offset + fileHandle.masterDirectory[rid.pageNum]->individualOff[rid.slotNum-1];
+   cout<<"slot offset "<< offset<< " end in "<< end<<endl;
    fseek(rbfms[fileHandle.targetName],offset,SEEK_SET);
    fread(data,end,1,rbfms[fileHandle.targetName]);
 //   cout<< sum<<" here\n";
@@ -271,9 +283,9 @@ RC RecordBasedFileManager::printRecord(const vector<Attribute> &recordDescriptor
             nullflag[7+(i*8)] = true;
 //            cout<< (7+(i*8))<<" is null\n";
         }
-        tempdata += sizeof(char);               //the flag byte has been used up, set pointer to next place
+        tempdata +=sizeof(char);
         size += sizeof(char);
-        cout<< "size of nulls"<< size<<endl;                                   
+//        cout<< "size of nulls"<< size<<endl;                                   
     }
     int * tempInt;                          //used for casting to int
     float * tempFloat;                      //casts to float
