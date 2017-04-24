@@ -48,7 +48,10 @@ RC RecordBasedFileManager::openFile(const string &fileName, FileHandle &fileHand
     }
     oIt = oldfiles.find(fileName);
     if(oIt != oldfiles.end()){          //retrieve old data
+        rbfms[fileName] = fopen(fileName.c_str(), "r+");
         fileHandle.masterDirectory = oldfiles[fileName];
+        fileHandle.targetName = fileName;
+        fileHandle.isOpen = true;
         cout<< "hurr\n";
         return 0;
     }
@@ -64,9 +67,9 @@ RC RecordBasedFileManager::closeFile(FileHandle &fileHandle) {
     if (it == rbfms.end()){
         return -1;                      			//file does not exist
     }
+    oldfiles[fileHandle.targetName] = fileHandle.masterDirectory; 
     fflush(rbfms[fileHandle.targetName]);            //flushes everything changed to file
     fclose(rbfms[fileHandle.targetName]);
-    oldfiles[fileHandle.targetName] = fileHandle.masterDirectory; 
 //    fileHandle.targetName = "";                     //empty refrence
 //    fileHandle.isOpen = false;
 //    cout<< "closed record file\n";                      //handle has closed file
@@ -203,11 +206,6 @@ RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Att
 }
 
 RC RecordBasedFileManager::readRecord(FileHandle &fileHandle, const vector<Attribute> &recordDescriptor, const RID &rid, void *data) {
-   //the page or slot does not exist
-//   cout<< "slot and page "<< rid.slotNum<< " "<<rid.pageNum<<endl;
-/*   if (rid.pageNum > fileHandle.getNumberOfPages() || rid.slotNum > fileHandle.masterDirectory[rid.pageNum]->numOfRecord) {
-     return -1;
-   }*/
    //sum individual offsets
    int sum = 0;                                     //offset within page
    int end = 0;
@@ -219,22 +217,17 @@ RC RecordBasedFileManager::readRecord(FileHandle &fileHandle, const vector<Attri
 //   for (unsigned i = 0 ; i<rid.slotNum-1; i++){
 //        sum += rid.pageNum;
 //   }
-   offset += (rid.pageNum * PAGE_SIZE) + sum;    //from beigning of file
-   for (unsigned i =0; i < fileHandle.masterDirectory[rid.pageNum]->individualOff.size(); i++){
-       cout<< "offset number "<<i<< " is "<< fileHandle.masterDirectory[rid.pageNum]->individualOff[i]<<endl;
-   }
+   offset = (rid.pageNum * PAGE_SIZE) + sum;    //from beigning of file
+//   for (unsigned i =0; i < fileHandle.masterDirectory[rid.pageNum]->individualOff.size(); i++){
+//       cout<< "offset number "<<i<< " is "<< fileHandle.masterDirectory[rid.pageNum]->individualOff[i]<<endl;
+//   }
    
-   cout<< "what "<< fileHandle.masterDirectory[rid.pageNum]->individualOff[rid.slotNum-1]<<endl;
+//   cout<< "what "<< fileHandle.masterDirectory[rid.pageNum]->individualOff[rid.slotNum]<<endl;
    end = offset + fileHandle.masterDirectory[rid.pageNum]->individualOff[rid.slotNum-1];
-   cout<<"slot offset "<< offset<< " end in "<< end<<endl;
+//   cout<<"name "<< fileHandle.targetName<<endl;
    fseek(rbfms[fileHandle.targetName],offset,SEEK_SET);
+//   cout<< "durr\n";
    fread(data,end,1,rbfms[fileHandle.targetName]);
-//   cout<< sum<<" here\n";
-   //read from page
-//   cout<< "number of attributes: "<< recordDescriptor.size()<<endl;
-   for (unsigned i = 0; i < recordDescriptor.size(); i++){
-//        cout<<i<< " "<< recordDescriptor[i].name<<endl;
-   }
 //   cout<< "read record\n";
 //    printRecord(recordDescriptor, data);
    return 0;
