@@ -169,16 +169,18 @@ int FileHandle::getAvailablePage(unsigned size){
     if(size > PAGE_SIZE){
         return -1;                  //record is too big
     }
+//    cout<<"retrieving available page"<<endl;
     if(masterDirectory.empty()){
         SlotDirectory * temp =  new SlotDirectory(getNumberOfPages());
         masterDirectory.push_back(temp);
         offset.push_back(0);   //add what the offest is
         return 0;
     }
+    cout<< "checking though this many pages: "<< masterDirectory.size()<<endl;
     for (unsigned i = 0; i < masterDirectory.size(); i++){    //itate through all slot directories
 //        cout << "In page " << getNumberOfPages() << ", it has freespace " << masterDirectory[i]->freespace << endl;
         if(PAGE_SIZE - offset[i] >= size){
-            return masterDirectory[i]->pageNum;        //there exist a page to add to
+            return i;        //there exist a page to add to
         }
     }
     SlotDirectory * temp =  new SlotDirectory(getNumberOfPages());

@@ -154,7 +154,7 @@ class SlotDirectory
     vector<int> individualOff;          //stores individual offsets
     unsigned freespace;
 
-    SlotDirectory(unsigned pageNum);
+    SlotDirectory(unsigned Num);
     ~SlotDirectory();
 };
 
