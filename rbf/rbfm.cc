@@ -161,11 +161,8 @@ RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Att
 //            cout<< "    "<<recordDescriptor[i].name<<": NULL";
         }
     }
-    cout<<"inset size "<<size<<endl;
     int available = fileHandle.getAvailablePage(size);
-            cout<< available<< " availaible\n";
     int prevOff = fileHandle.offset[available];
-            cout<<prevOff<< " offset\n";  
 //    cout<<"total bytes "<<size<<" will be inserted into "<< available<< endl;
     fseek(rbfms[fileHandle.targetName],(PAGE_SIZE * available) + prevOff,SEEK_SET);
     fwrite(data,size,1,rbfms[fileHandle.targetName]);
@@ -175,8 +172,8 @@ RC RecordBasedFileManager::insertRecord(FileHandle &fileHandle, const vector<Att
     rid.pageNum = available;                                            //update rid values
     rid.slotNum = fileHandle.masterDirectory[available]->numOfRecord;
     fileHandle.masterDirectory[available]->individualOff.push_back(size);
-    cout<< "file "<<fileHandle.targetName << " now has this many records "<< fileHandle.masterDirectory[available]->numOfRecord<< " new offset on page "<< available <<" is "<< fileHandle.offset[available]<< endl;
-    cout<< "inserted into slot, page "<< rid.slotNum << " "<< rid.pageNum<<endl;
+//    cout<< "file "<<fileHandle.targetName << " now has this many records "<< fileHandle.masterDirectory[available]->numOfRecord<< " new offset on page "<< available <<" is "<< fileHandle.offset[available]<< endl;
+//    cout<< "inserted into slot, page "<< rid.slotNum << " "<< rid.pageNum<<endl;
     return 0;
 }
 
