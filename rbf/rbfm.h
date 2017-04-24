@@ -9,7 +9,6 @@
 #include <cstdint>
 #include <cstring>
 #include <math.h>
-#include <map>
 
 #include "../rbf/pfm.h"
 
@@ -78,6 +77,9 @@ public:
 class RecordBasedFileManager
 {
 public:
+
+  map<string,FILE *> rbfms;                           //pointers to files for rbfm
+  map<string,FILE *>::iterator it;                         //map iterator
   static RecordBasedFileManager* instance();
 
   RC createFile(const string &fileName);
@@ -147,14 +149,10 @@ private:
 class SlotDirectory
 {
   public:
-    unsigned pageNum;
-    unsigned numOfRecord;
-    map<unsigned, void *> RIDs;                               //find the data location by rid.slotNum
+    unsigned pageNum;             //corresponding page number
+    unsigned numOfRecord;         //how many records on page
+    vector<int> individualOff;          //stores individual offsets
     unsigned freespace;
-
-    RC addRecord(RID rid, void * data, unsigned sizeOfData);
-    //RC deleteRecord(RID rid);
-    RC findRecord(RID rid, void * data);
 
     SlotDirectory(unsigned pageNum);
     ~SlotDirectory();

@@ -38,6 +38,8 @@ protected:
 
 private:
     static PagedFileManager *_pf_manager;
+
+
 };
 
 
@@ -52,7 +54,8 @@ public:
     string targetName;                                                    //filename of target
     bool isOpen;                                                          //sees if a file has been open
     PagedFileManager * pfmPointer;
-    map <unsigned, SlotDirectory*> masterDirectory;                       //holds all the slot directories
+    vector <SlotDirectory*> masterDirectory;                              //holds all the slot directories
+    vector <unsigned> offset;                                                  //holds where the offset of each free space
 
     FileHandle();                                                         // Default constructor
     ~FileHandle();                                                        // Destructor
@@ -61,6 +64,7 @@ public:
     RC writePage(PageNum pageNum, const void *data);                      // Write a specific page
     RC appendPage(const void *data);                                      // Append a specific page
     unsigned getNumberOfPages();                                          // Get the number of pages in the file
+    int getAvailablePage(unsigned size);                                  // takes in a size and points to page that can take it                        
     RC collectCounterValues(unsigned &readPageCount, unsigned &writePageCount, unsigned &appendPageCount);  // Put the current counter values into variables
 };
 

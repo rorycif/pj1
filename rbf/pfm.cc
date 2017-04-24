@@ -1,4 +1,5 @@
 #include "pfm.h"
+#include "rbfm.h"
 
 PagedFileManager* PagedFileManager::_pf_manager = 0;
 
@@ -134,7 +135,11 @@ RC FileHandle::appendPage(const void *data)
 //    cout<< "appending to this page count: " << getNumberOfPages()<< endl;
     fseek(pfmPointer->pfms[targetName],0, SEEK_END);                //find end of file
     fwrite(data, PAGE_SIZE, 1, pfmPointer->pfms[targetName]);       //write to memory
-    fflush(pfmPointer->pfms[targetName]);                           //commit to disk
+    fflush(pfmPointer->pfms[targetName]);                          //commit to disk
+    SlotDirectory * temp =  new SlotDirectory(getNumberOfPages());
+    masterDirectory.push_back(temp);                     //add slot directory to page
+    offset.push_back(0);   //add what the offest is                //for slot based directories this is the offset
+    cout << offset[getNumberOfPages()-1]<< " offset\n";
     appendPageCounter++;                                            //increments counter
 //    cout<< "now has this many pages: "<< getNumberOfPages()<<endl;
     return 0;
@@ -158,4 +163,27 @@ RC FileHandle::collectCounterValues(unsigned &readPageCount, unsigned &writePage
     writePageCounter = writePageCount;
     appendPageCounter = writePageCount;
     return 0;
+}
+
+int FileHandle::getAvailablePage(unsigned size){
+    if(size > PAGE_SIZE){
+        return -1;                  //record is too big
+    }
+    if(masterDirectory.empty()){
+        SlotDirectory * temp =  new SlotDirectory(getNumberOfPages());
+        masterDirectory.push_back(temp);
+        offset.push_back(0);   //add what the offest is
+        return 0;
+    }
+    for (unsigned i = 0; i < masterDirectory.size(); i++){    //itate through all slot directories
+//        cout << "In page " << getNumberOfPages() << ", it has freespace " << masterDirectory[i]->freespace << endl;
+        if(PAGE_SIZE - offset[i] >= size){
+            return masterDirectory[i]->pageNum;        //there exist a page to add to
+        }
+    }
+    SlotDirectory * temp =  new SlotDirectory(getNumberOfPages());
+    masterDirectory.push_back(temp);
+    offset.push_back(0);   //add what the offest is
+    return masterDirectory.size()-1;        //there was no available page so we make another
+    
 }
